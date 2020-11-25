@@ -1,0 +1,67 @@
+// Block definition (there may be more than one block per file)
+FUNCTION_BLOCK teste
+
+// Define input variables
+VAR_INPUT
+    temperatura : REAL;
+    umidade : REAL;
+END_VAR
+
+// Define output variable
+VAR_OUTPUT
+    ventilacao : REAL;
+END_VAR
+
+// Fuzzify input variable 'temperatura'
+FUZZIFY temperatura
+    TERM frio := (0, 1) (20, 0) ;  
+    TERM ameno := (15, 0) (20,1) (25,1) (30,0);
+    TERM quente := (25, 0) (30, 1);
+END_FUZZIFY
+
+// Fuzzify input variable 'umidade'
+FUZZIFY umidade
+    TERM seca := (0, 1) (30, 1) (60,0) ;
+	TERM normal := (45,0) (90,1);
+
+END_FUZZIFY
+
+// Defzzzify output variable 'ventilacao'
+DEFUZZIFY ventilacao
+    TERM lenta := (0,1) (10,0);
+    TERM normal := (10,0) (15,1) (20,0);
+    TERM rapida := (20,0) (25,1) (30,1);
+    // Use 'Center Of Gravity' defuzzification method
+    METHOD : COG;
+    // Default value is 0 (if no rule activates defuzzifier)
+    DEFAULT := 0;
+END_DEFUZZIFY
+
+RULEBLOCK No1
+    // Use 'min' for 'and' (also implicit use 'max'
+    // for 'or' to fulfill DeMorgan's Law)
+    AND : MIN;
+    // Use 'min' activation method
+    ACT : MIN;
+    // Use 'max' accumulation method
+    ACCU : MAX;
+
+    RULE 1 : IF temperatura IS frio 
+                THEN ventilacao IS lenta;
+
+    RULE 2 : IF temperatura IS ameno and umidade is seca 
+                THEN ventilacao IS normal; 
+
+    RULE 3 : IF temperatura IS ameno and umidade is normal 
+                THEN ventilacao IS normal; 
+				
+	RULE 4: IF temperatura IS quente AND umidade is normal 
+                THEN ventilacao is rapida;
+
+	RULE 5: IF umidade IS seca AND temperatura IS quente 
+               THEN ventilacao IS rapida;				   
+
+	   
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
